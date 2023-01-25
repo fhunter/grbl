@@ -52,7 +52,7 @@ import sys
 import argparse
 import threading
 
-RX_BUFFER_SIZE = 128
+RX_BUFFER_SIZE = 64
 BAUD_RATE = 115200
 ENABLE_STATUS_REPORTS = True
 REPORT_INTERVAL = 1.0 # seconds
@@ -106,7 +106,7 @@ if check_mode :
     print("Enabling Grbl Check-Mode: SND: [$C]", end=' ')
     s.write(b"$C\n")
     while 1:
-        grbl_out = s.readline().strip() # Wait for grbl response with carriage return
+        grbl_out = s.readline().strip().encode('utf-8') # Wait for grbl response with carriage return
         if grbl_out.find('error') >= 0 :
             print("REC:",grbl_out)
             print("  Failed to set Grbl check-mode. Aborting...")
@@ -134,15 +134,18 @@ if settings_mode:
         l_count += 1 # Iterate line counter    
         # l_block = re.sub('\s|\(.*?\)','',line).upper() # Strip comments/spaces/new line and capitalize
         l_block = line.strip() # Strip all EOL characters for consistency
-        if verbose: print("SND>"+str(l_count)+": \"" + l_block + "\"")
+        if verbose: 
+            print("SND>"+str(l_count)+": \"" + l_block + "\"")
         s.write(l_block.encode('utf-8') + b'\n') # Send g-code block to grbl
         while 1:
             grbl_out = s.readline().strip() # Wait for grbl response with carriage return
             if grbl_out.find('ok') >= 0 :
-                if verbose: print("  REC<"+str(l_count)+": \""+grbl_out+"\"")
+                if verbose: 
+                    print("  REC<"+str(l_count)+": \""+grbl_out+"\"")
                 break
             elif grbl_out.find('error') >= 0 :
-                if verbose: print("  REC<"+str(l_count)+": \""+grbl_out+"\"")
+                if verbose: 
+                    print("  REC<"+str(l_count)+": \""+grbl_out+"\"")
                 error_count += 1
                 break
             else:
@@ -174,7 +177,7 @@ else:
         if verbose: print("SND>"+str(l_count)+": \"" + l_block + "\"")
     # Wait until all responses have been received.
     while l_count > g_count :
-        out_temp = s.readline().strip() # Wait for grbl response
+        out_temp = s.readline().strip().decode('utf-8') # Wait for grbl response
         if out_temp.find('ok') < 0 and out_temp.find('error') < 0 :
             print("    MSG: \""+out_temp+"\"") # Debug response
         else :
